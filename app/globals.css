@@ -24,3 +24,15 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom "Now" indicator line */
+.fc .fc-now-indicator-line {
+  border-color: #ff0000 !important; /* Bright Red */
+  border-top-width: 3px !important;
+}
+
+/* The little arrow/dot at the start of the line */
+.fc .fc-now-indicator-arrow {
+  border-left-color: #ff0000 !important;
+  border-width: 8px !important;
+}
