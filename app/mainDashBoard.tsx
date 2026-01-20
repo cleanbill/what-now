@@ -13,6 +13,7 @@ export default function MainDashboard({ week, onUpdateDay, onUpdateEvent, onUpda
     const calendarRef = useRef<any>(null);
     const [selection, setSelection] = useState<{ type: 'MEAL' | 'EVENT', id: string } | null>(null);
     const [pendingId, setPendingId] = useState<string | null>(null);
+    const [isLiveMode, setIsLiveMode] = useState(true);
     const editor = useCreateBlockNote();
 
     const activeEvent = useMemo(() => {
@@ -23,6 +24,14 @@ export default function MainDashboard({ week, onUpdateDay, onUpdateEvent, onUpda
             .flatMap((d: Day) => d.events)
             .find((e: DayEvent) => e.uuid === selection.id) || null;
     }, [week, selection]); // Must depend on both
+
+    const isCurrent = useMemo(() => {
+        if (!activeEvent) return false;
+        const now = new Date();
+        const start = new Date(activeEvent.from);
+        const end = new Date(activeEvent.to);
+        return now >= start && now <= end;
+    }, [activeEvent]);
 
     const calendarItems = useMemo(() => {
         return week.flatMap((day: Day) => [
@@ -71,6 +80,37 @@ export default function MainDashboard({ week, onUpdateDay, onUpdateEvent, onUpda
 
         setPendingId(newEvent.uuid);
     };
+
+    useEffect(() => {
+
+        const checkCurrentActivity = () => {
+            const now = new Date();
+
+            // Flatten all events to find the one happening right now
+            const currentActivity = week
+                .flatMap((day: Day) => day.events)
+                .find((event: DayEvent) => {
+                    const start = new Date(event.from);
+                    const end = new Date(event.to);
+                    return now >= start && now <= end;
+                });
+
+            // Only update if we found something AND it's not already selected
+            if (isLiveMode && currentActivity && selection?.id !== currentActivity.uuid) {
+                setSelection({ type: 'EVENT', id: currentActivity.uuid });
+                console.log("🕒 Time Match! Switching to:", currentActivity.name);
+                setSelection({ type: 'EVENT', id: currentActivity.uuid });
+            }
+        };
+
+        // Run immediately on mount
+        checkCurrentActivity();
+
+        // Then check every minute
+        const interval = setInterval(checkCurrentActivity, 60000);
+
+        return () => clearInterval(interval);
+    }, [week, selection?.id]);
 
     useEffect(() => {
         if (pendingId) {
@@ -167,6 +207,7 @@ export default function MainDashboard({ week, onUpdateDay, onUpdateEvent, onUpda
                 ) : activeEvent && (
                     <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-300">
                         <EventForm
+                            isCurrent={isCurrent}
                             onDeleteEvent={onDeleteEvent}
                             event={activeEvent}
                             onUpdate={(field, val) => onUpdateEvent(activeEvent.uuid, { ...activeEvent, [field]: val })}

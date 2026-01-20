@@ -3,17 +3,27 @@ import OrderBuilder from './orderBuilder';
 
 interface EventFormProps {
     event: DayEvent;
+    isCurrent: boolean;
     onUpdate: (field: keyof DayEvent, value: any) => void;
     onDeleteEvent: (uuid: string) => void
 }
 
-export function EventForm({ event, onUpdate, onDeleteEvent }: EventFormProps) {
+export function EventForm({ event, isCurrent, onUpdate, onDeleteEvent }: EventFormProps) {
     // Check if current type is Meal to toggle the UI
     const isMeal = event.type === EventType.Meal;
 
     return (
         <div className="p-4 border-4 border-black bg-yellow-50 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-4">
             {/* Top Row: Name and Type together */}
+            {isCurrent && (
+                <div className="flex items-center gap-2 mb-2">
+                    <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    <span className="text-[10px] font-black uppercase text-red-600">Active Now</span>
+                </div>
+            )}
             <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
                     <label className="text-[10px] font-black uppercase block mb-1">Title</label>
